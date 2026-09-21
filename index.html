@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 Тепловая Рефлексия | Интерактивная игра</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9; color: #333; }
+        .hidden { display: none; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
+        button { padding: 12px 24px; font-size: 16px; cursor: pointer; margin: 10px; border: none; border-radius: 8px; background-color: #ff5722; color: white; transition: 0.3s; }
+        button:hover { background-color: #e64a19; }
+        input { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; width: 80%; margin-bottom: 15px; }
+        h1, h2 { color: #d84315; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <!-- Экран приветствия -->
+        <div id="welcome-screen">
+            <h1>🔥 Тепловая Рефлексия</h1>
+            <h3>Интерактивная игра по теме «Тепловые явления»️</h3>
+            <p>Добро пожаловать!<br>Давайте проверим, насколько хорошо вы усвоили тему.</p>
+            <p>👤 Введите ваше имя:</p>
+            <input type="text" id="player-name" placeholder="Ваше имя...">
+            <br>
+            <button id="start-btn">🚀 Начать игру</button>
+        </div>
+
+        <!-- Экран вопросов (Заглушка для примера) -->
+        <div id="quiz-screen" class="hidden">
+            <h2>Вопрос 1</h2>
+            <p>Здесь будет вопрос по тепловым явлениям...</p>
+            <button id="next-btn">Следующий вопрос →</button>
+            <button id="finish-btn" style="background-color: #4caf50;">Показать результаты</button>
+        </div>
+
+        <!-- Экран результатов -->
+        <div id="results-screen" class="hidden">
+            <h2>🏆 Результаты рефлексии</h2>
+            <p><strong>Общий балл:</strong> <span id="score">85</span>/100</p>
+            <p><strong>Уровень понимания:</strong> <span id="level">Высокий</span></p>
+            <p>💡 <strong>Рекомендации:</strong> <span id="recommendations">Отличная работа! Повторите закон сохранения энергии.</span></p>
+            <button id="restart-btn">Пройти заново</button>
+            <p id="save-status" style="color: green; font-size: 14px;"></p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK и логика игры -->
+    <script type="module">
+        // Импортируем необходимые функции из CDN (версия 10.x)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Ваша конфигурация Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyBsfP6BUDz8RY1SRIcNxUBZJkoga6kQQbo",
+          authDomain: "diffy-dee60.firebaseapp.com",
+          projectId: "diffy-dee60",
+          storageBucket: "diffy-dee60.firebasestorage.app",
+          messagingSenderId: "344356320469",
+          appId: "1:344356320469:web:fd81931f1bca0ae2c69e5c",
+          measurementId: "G-CN1VBKX7ZD"
+        };
+
+        // Инициализация Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app); // Инициализация базы данных Firestore
+
+        // Получаем элементы DOM
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const nameInput = document.getElementById('player-name');
+
+        // Логика переключения экранов
+        document.getElementById('start-btn').addEventListener('click', () => {
+            if(nameInput.value.trim() !== "") {
+                welcomeScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+            } else {
+                alert("Пожалуйста, введите ваше имя!");
+            }
+        });
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            alert("Переход к следующему вопросу...");
+        });
+
+        document.getElementById('finish-btn').addEventListener('click', async () => {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            const playerName = nameInput.value;
+            const finalScore = document.getElementById('score').innerText;
+            const statusEl = document.getElementById('save-status');
+
+            // Сохранение результата в базу данных Firebase (Firestore)
+            try {
+                statusEl.innerText = "Сохранение результата...";
+                const docRef = await addDoc(collection(db, "game_results"), {
+                    name: playerName,
+                    score: finalScore,
+                    date: new Date().toISOString()
+                });
+                statusEl.innerText = "✅ Результат успешно сохранен в базе!";
+                console.log("Документ записан с ID: ", docRef.id);
+            } catch (e) {
+                statusEl.innerText = "⚠️ Ошибка при сохранении (проверьте правила безопасности Firestore).";
+                console.error("Ошибка добавления документа: ", e);
+            }
+        });
+
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            resultsScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            nameInput.value = '';
+            document.getElementById('save-status').innerText = '';
+        });
+    </script>
+</body>
+</html>
